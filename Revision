@@ -1,0 +1,685 @@
+import { useState } from "react";
+
+const MODULES = [
+  {
+    id: "liga",
+    code: "01",
+    title: "Procédé UV-LIGA",
+    subtitle: "Fondamentaux & variantes",
+    icon: "⚙️",
+    accent: "#4a90d9",
+    priority: "Indispensable",
+    timeEstimate: "4–6 h",
+    description: "Le cœur technique du poste. Maîtriser les 8 étapes, les différences UV vs X-ray, les matériaux et les paramètres critiques.",
+    resources: [
+      {
+        type: "Article",
+        format: "Open Access",
+        title: "UV-LIGA: From Development to Commercialization",
+        authors: "Lorenz et al.",
+        source: "MDPI Micromachines, 2014",
+        url: "https://www.mdpi.com/2072-666X/5/3/486",
+        why: "Référence académique canonique sur l'UV-LIGA industriel, incluant les applications horlogères et la comparaison avec le LIGA synchrotron. Contient des schémas de process et des exemples de composants multi-niveaux.",
+        keyTopics: ["8 étapes UV-LIGA", "SU-8 vs AZ résines", "Comparaison X-ray/UV", "Applications horlogeries Mimotec"],
+        difficulty: "Intermédiaire",
+      },
+      {
+        type: "Article",
+        format: "Open Access",
+        title: "Comprehensive Review: Electroforming as Microsystem Fabrication Technique",
+        authors: "Plusieurs auteurs",
+        source: "ResearchGate / Journal of Micromechanics, 2025",
+        url: "https://www.researchgate.net/publication/277673974_UV-LIGA_From_Development_to_Commercialization",
+        why: "Vue d'ensemble de l'électroformage dans les microsystèmes : grain, contraintes internes, alliages Ni, NiCo, NiP. Utile pour la partie matériaux et propriétés mécaniques.",
+        keyTopics: ["Électroformage précision", "Propriétés mécaniques Ni", "Alliages NiP, NiCo", "Comparaison procédés additifs"],
+        difficulty: "Avancé",
+      },
+      {
+        type: "Article industrie",
+        format: "Gratuit",
+        title: "Pushing the Boundaries of Electroforming – Advanced LIGA Processes",
+        authors: "Veco Precision",
+        source: "insights.vecoprecision.com, 2023",
+        url: "https://insights.vecoprecision.com/pushing-the-boundaries-of-electroforming-advanced-lithographic-electroforming-and-liga-processes-explained",
+        why: "Perspective industrielle d'un leader mondial de l'électroformage. Présente le Laser Direct Imaging (LDI) comme évolution de l'UV-LIGA — technologie à connaître pour montrer une veille technologique.",
+        keyTopics: ["LDI vs masque UV", "Aspect ratio", "Applications industrielles", "Tendances process"],
+        difficulty: "Accessible",
+      },
+      {
+        type: "Brevet",
+        format: "Gratuit USPTO",
+        title: "UV-LIGA process for fabricating a multilayer metal structure",
+        authors: "Déposant lié à l'industrie horlogère",
+        source: "USPTO patent 8070970",
+        url: "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/8070970",
+        why: "Exemple concret de brevet de process UV-LIGA multi-niveaux pour pièces horlogères. Lecture des revendications = bonne préparation aux questions sur les limites du procédé et la PI.",
+        keyTopics: ["Procédé multicouche", "Seed layer", "Lapping / planarisation", "Demoulage"],
+        difficulty: "Avancé",
+      },
+      {
+        type: "Article horlogerie",
+        format: "Gratuit",
+        title: "Technologie LIGA-UV : précision et qualité pour composants nickel",
+        authors: "Université de Franche-Comté",
+        source: "endirect.univ-fcomte.fr",
+        url: "https://endirect.univ-fcomte.fr/publication/technologie-liga-uv-prcision-et-qualit-pour-des-composants-nickel/",
+        why: "Article en français synthétisant le procédé UV-LIGA dans le contexte horloger : microconnecteurs, microrésonateurs et composants d'échappement. Vocabulaire FR utile pour l'entretien.",
+        keyTopics: ["Précision µm", "Nickel électroformé", "Contexte horloger", "Vocabulaire technique FR"],
+        difficulty: "Accessible",
+      },
+    ],
+    keyQuestions: [
+      "Quelles sont les 8 étapes du procédé UV-LIGA dans l'ordre ?",
+      "Pourquoi préférer l'UV-LIGA au LIGA synchrotron en production industrielle ?",
+      "Quelles sont les limites de l'UV-LIGA en termes d'aspect ratio et d'épaisseur ?",
+      "Quelles résines sont utilisées (SU-8 vs résines AZ) et pourquoi ?",
+      "Quel est le rôle de la seed layer PVD Ti/Cu ? Pourquoi Ti ?",
+    ],
+  },
+  {
+    id: "photolithography",
+    code: "02",
+    title: "Photolithographie",
+    subtitle: "Théorie & paramètres procédé",
+    icon: "💡",
+    accent: "#9b59b6",
+    priority: "Indispensable",
+    timeEstimate: "3–4 h",
+    description: "Softbake, exposition i-line, PEB, développement — avec focus films épais et implications LIGA. Déjà bien couvert dans ta préparation existante.",
+    resources: [
+      {
+        type: "Livre",
+        format: "Payant / Bibliothèque",
+        title: "Photolithography (MicroChemicals textbook)",
+        authors: "MicroChemicals GmbH",
+        source: "microchemicals.com — téléchargeable gratuitement",
+        url: "https://www.microchemicals.com/downloads/photolithography.pdf",
+        why: "Ta source principale déjà utilisée. Chapitres clés : softbake (p.40–55), exposure (p.60–80), development (p.85–100), thick-film specificities. Garde les tableaux de paramètres.",
+        keyTopics: ["Softbake 100°C 1min/µm", "i-line 365nm", "PEB SU-8", "Développement TMAH"],
+        difficulty: "Référence",
+      },
+      {
+        type: "Livre",
+        format: "Payant — accès EPFL/EPFZ",
+        title: "Fundamentals of Microfabrication and Nanotechnology (Vol. 1–3)",
+        authors: "Marc Madou",
+        source: "CRC Press, 3e édition 2011",
+        url: "https://www.routledge.com/Fundamentals-of-Microfabrication-and-Nanotechnology-Three-Volume-Set/Madou/p/book/9781420055160",
+        why: "La référence académique MEMS/microfabrication. Volume 1 : lithographie, gravure, dépôts. Volume 2 : électroformage, LIGA. Niveau ingénieur. Accès possible via EPFL ou bibliothèques universitaires HES-SO.",
+        keyTopics: ["Résolution optique", "Profil de résine", "Électrodépôt paramètres", "Procédés MEMS"],
+        difficulty: "Avancé",
+      },
+      {
+        type: "Cours libre",
+        format: "Gratuit",
+        title: "Introduction to Microfabrication Processes",
+        authors: "MIT OpenCourseWare",
+        source: "ocw.mit.edu",
+        url: "https://ocw.mit.edu/courses/6-152j-micro-nano-processing-technology-fall-2005/",
+        why: "Cours MIT en accès libre sur les procédés de microfabrication (lithographie, dépôts, gravure). Les notes de cours sont bien structurées pour la révision des fondamentaux.",
+        keyTopics: ["Résolution Rayleigh", "Profondeur de champ", "Masques Cr", "Contraste résine"],
+        difficulty: "Intermédiaire",
+      },
+    ],
+    keyQuestions: [
+      "Expliquer le mécanisme chimique de la solubilisation d'une résine positive après exposition (DNQ → acide indène-carboxylique).",
+      "Pourquoi le PEB est-il critique pour SU-8 mais pas pour les résines AZ positives ?",
+      "Quel est l'impact d'une sous-exposition sur un film de 100 µm ?",
+      "Comment optimiser la dose d'exposition pour une résine épaisse ?",
+      "Quels sont les 3 paramètres qui gouvernent la résolution en contact/proximité ?",
+    ],
+  },
+  {
+    id: "electroforming",
+    code: "03",
+    title: "Électroformage Nickel",
+    subtitle: "Bain sulfamate, paramètres, qualité",
+    icon: "⚡",
+    accent: "#16a085",
+    priority: "Indispensable",
+    timeEstimate: "3–4 h",
+    description: "Bain nickel sulfamate, densité de courant, contraintes internes, microstructure, défauts et propriétés mécaniques des dépôts.",
+    resources: [
+      {
+        type: "Article scientifique",
+        format: "Payant / ScienceDirect",
+        title: "Nickel sulfamate plating: its mystique and practicality",
+        authors: "Lelevich & Sherwood",
+        source: "Transactions of the IMF, ScienceDirect, 2004",
+        url: "https://www.sciencedirect.com/science/article/abs/pii/0026057696813535",
+        why: "Référence sur le bain nickel sulfamate : hydrolyse à pH < 3 et T > 70°C, contraintes internes, influence du chlorure de nickel, comparaison avec bain Watts. Directement applicable au process Rolex.",
+        keyTopics: ["pH 3.5–4.5", "Température 45–60°C", "Hydrolyse sulfamate", "Contraintes internes"],
+        difficulty: "Avancé",
+      },
+      {
+        type: "Forum technique",
+        format: "Gratuit",
+        title: "Nickel Sulfamate Electroforming: FAQs & Q&A",
+        authors: "Praticiens industriels",
+        source: "finishing.com",
+        url: "https://www.finishing.com/24/48.shtml",
+        why: "Retours d'expérience praticiens sur les problèmes concrets : pitting, stress, séparation mandrin, contrôle pH. Utile pour illustrer tes réponses par des cas réels lors de l'entretien.",
+        keyTopics: ["Anti-pitting SNAP", "Contrôle pH quotidien", "Séparation mandrin", "Filtration bain"],
+        difficulty: "Accessible",
+      },
+      {
+        type: "Article",
+        format: "Gratuit",
+        title: "UV-LIGA Microfabrication Process — Multi-layer SU-8 (THz waveguides)",
+        authors: "Lancaster University",
+        source: "eprints.lancs.ac.uk",
+        url: "https://eprints.lancs.ac.uk/id/eprint/80483/1/UV_LIGA_Microfabrication_Process_for_sub_Terahertz_Waveguides_Utilizing_Multi_Layered_of_SU_8_Photoresist_CP.pdf",
+        why: "Procédure détaillée de softbake/post-bake pour SU-8 multi-couches, suivi par le contrôle du cuivre électroformé. Bonne illustration des interactions lithographie–électroformage.",
+        keyTopics: ["SU-8 multi-couches", "Cuivre électroformé", "Contrôle surface", "Qualité de dépôt"],
+        difficulty: "Avancé",
+      },
+    ],
+    keyQuestions: [
+      "Quels sont les paramètres critiques du bain nickel sulfamate (pH, T°, densité de courant) et leurs effets sur les propriétés du dépôt ?",
+      "Pourquoi le pH doit-il rester entre 3,5 et 4,5 ? Que se passe-t-il en dehors ?",
+      "Comment contrôle-t-on les contraintes internes dans un dépôt nickel ? (rôle de la saccharine)",
+      "Quelle est la différence entre nickel pur, NiP et NiCo en termes de propriétés pour l'horlogerie ?",
+      "Comment détecte-t-on et prévient-on le pitting en bain sulfamate ?",
+    ],
+  },
+  {
+    id: "echappement",
+    code: "04",
+    title: "Échappement horloger",
+    subtitle: "Fonctionnement, matériaux, LIGA",
+    icon: "⌚",
+    accent: "#e67e22",
+    priority: "Important",
+    timeEstimate: "2–3 h",
+    description: "Comprendre l'organe régulateur, la roue d'échappement, l'ancre, le spiral — et le contexte Rolex (Chronergy, Dyapulse, NiP via LIGA).",
+    resources: [
+      {
+        type: "Article horlogerie",
+        format: "Gratuit",
+        title: "Rolex UV-LiGA : l'échappement Chronergy et le NiP",
+        authors: "Passion Horlogère",
+        source: "passion-horlogere.com",
+        url: "https://passion-horlogere.com/rolex-uv-liga/",
+        why: "Explique directement comment Rolex utilise l'UV-LIGA pour produire la roue d'ancre Chronergy en alliage NiP (antimagnétique). Lien direct entre le procédé et le produit final. À lire en priorité.",
+        keyTopics: ["Roue Chronergy NiP", "Calibre 3255", "Antimagnétisme", "LIGA chez Rolex"],
+        difficulty: "Accessible",
+      },
+      {
+        type: "Article horlogerie",
+        format: "Gratuit",
+        title: "Calibres Rolex en détail — Chronergy et réserve de marche",
+        authors: "Chrono24 Magazine",
+        source: "chrono24.fr",
+        url: "https://www.chrono24.fr/magazine/calibres-rolex-en-detail-la-gamme-actuelle-de-mouvements-de-la-marque-a-la-couronne-p_72423/",
+        why: "Détails techniques des calibres Rolex actuels : Chronergy (NiP, 14 brevets, efficacité +15%), Parachrom, Glucydur. Indispensable pour parler intelligemment des mouvements Rolex lors de l'entretien.",
+        keyTopics: ["Efficacité Chronergy", "Calibre 3255", "Réserve de marche 70h", "NiP amagnétique"],
+        difficulty: "Accessible",
+      },
+      {
+        type: "Article horlogerie",
+        format: "Gratuit",
+        title: "Rolex Land-Dweller 2025 — Dyapulse Escapement en silicium",
+        authors: "Teddy Baldassarre",
+        source: "teddybaldassarre.com",
+        url: "https://teddybaldassarre.com/blogs/watches/rolex-vs-patek-philippe",
+        why: "Actualité 2025 : Rolex lance le Dyapulse, échappement en silicium pour le Land-Dweller (calibre 7135, 5 Hz). Montre que Rolex continue d'innover au-delà du LIGA NiP. Montre ta veille technologique.",
+        keyTopics: ["Dyapulse silicon", "5 Hz / 36600 vph", "Calibre 7135", "Land-Dweller 2025"],
+        difficulty: "Accessible",
+      },
+      {
+        type: "Article horlogerie",
+        format: "Gratuit",
+        title: "Patek Philippe Advanced Research — Silinvar, Pulsomax, Oscillomax",
+        authors: "SwissWatches Magazine",
+        source: "swisswatches-magazine.com",
+        url: "https://swisswatches-magazine.com/the-ultimate-guide-to-the-patek-philippe-advanced-research/",
+        why: "Contexte sectoriel : le consortium Rolex/Patek/Swatch/CSEM autour du Silinvar. Permet de positionner Rolex dans l'écosystème de recherche suisse sur les matériaux d'échappement.",
+        keyTopics: ["Silinvar CSEM", "Consortium Rolex/Patek/Swatch", "Silicon vs LIGA NiP", "Oxydation thermique"],
+        difficulty: "Accessible",
+      },
+    ],
+    keyQuestions: [
+      "Quel est le rôle de la roue d'échappement et de l'ancre dans le mécanisme de régulation ?",
+      "Pourquoi Rolex a-t-il choisi le NiP (via LIGA) pour la roue Chronergy plutôt que l'acier ?",
+      "Quels sont les avantages de l'échappement Chronergy vs un Swiss lever traditionnel ?",
+      "Quelle est la différence entre l'approche Rolex (LIGA NiP) et l'approche Patek (Silinvar/DRIE) ?",
+      "Qu'est-ce que le Dyapulse (2025) et pourquoi est-ce une rupture technologique pour Rolex ?",
+    ],
+  },
+  {
+    id: "amelioration-continue",
+    code: "05",
+    title: "Amélioration Continue",
+    subtitle: "PDCA, 8D, Ishikawa, Cpk, CTQ",
+    icon: "📈",
+    accent: "#27ae60",
+    priority: "Indispensable",
+    timeEstimate: "2–3 h",
+    description: "La fiche de poste mentionne explicitement l'amélioration continue, le reporting et la formalisation du savoir-faire. Ces outils sont testables à l'entretien.",
+    resources: [
+      {
+        type: "Cours",
+        format: "Gratuit",
+        title: "ASQ — DMAIC, PDCA, 8D : Guide comparatif",
+        authors: "American Society for Quality",
+        source: "asq.org",
+        url: "https://asq.org/quality-resources/dmaic",
+        why: "Référence mondiale qualité. Fiches DMAIC, PDCA, 8D bien structurées et comparées. Utile pour formaliser la différence entre les méthodologies et savoir quand appliquer laquelle.",
+        keyTopics: ["DMAIC vs PDCA", "8D Problem Solving", "Define/Measure/Analyze", "Control phase"],
+        difficulty: "Accessible",
+      },
+      {
+        type: "Article",
+        format: "Gratuit",
+        title: "Six Sigma and Design of Experiments (DOE) in DMAIC",
+        authors: "SixSigmaDSI",
+        source: "sixsigmadsi.com",
+        url: "https://sixsigmadsi.com/glossary/doe-for-sigma/",
+        why: "Explique clairement la place du DOE dans le cycle DMAIC, en particulier dans les phases Analyze et Improve. Donne le vocabulaire facteurs/réponses/interactions — directement applicable en photolithographie et électroformage.",
+        keyTopics: ["DOE dans DMAIC", "Facteurs vs réponses", "Factorial design", "Response Surface"],
+        difficulty: "Intermédiaire",
+      },
+      {
+        type: "Livre",
+        format: "Payant — accès bibliothèque",
+        title: "Design and Analysis of Experiments",
+        authors: "Douglas C. Montgomery",
+        source: "Wiley, 9e édition 2017",
+        url: "https://www.wiley.com/en-us/Design+and+Analysis+of+Experiments%2C+9th+Edition-p-9781119492443",
+        why: "LA référence universelle des plans d'expériences. Chapitres prioritaires : 5 (2k factorial), 6 (fractional factorial), 11 (RSM). Disponible en bibliothèques universitaires. Pour approfondir si tu dois présenter un DOE lors d'un cas pratique.",
+        keyTopics: ["Plans 2k", "Plans fractionnés", "Analyse ANOVA", "Surface de réponse RSM"],
+        difficulty: "Avancé",
+      },
+      {
+        type: "Outil",
+        format: "Gratuit",
+        title: "Diagramme d'Ishikawa (5M) — guide pratique",
+        authors: "ASQ Quality Tools",
+        source: "asq.org/quality-resources/fishbone",
+        url: "https://asq.org/quality-resources/fishbone",
+        why: "Outil que tu dois savoir appliquer spontanément. La fiche de poste parle d'identification des axes d'amélioration — l'Ishikawa est le premier outil à sortir. Prépare un exemple sur un défaut LIGA.",
+        keyTopics: ["5M : Matière/Méthode/Milieu/Main d'oeuvre/Machine", "Root cause analysis", "Arêtes primaires/secondaires"],
+        difficulty: "Accessible",
+      },
+      {
+        type: "Article",
+        format: "Gratuit",
+        title: "Cpk, Cp et capacité procédé — guide complet",
+        authors: "Six Sigma Daily",
+        source: "sixsigmadaily.com",
+        url: "https://www.sixsigmadaily.com/process-capability-cp-cpk/",
+        why: "La capacité procédé (Cpk) est souvent testée en entretien technique industrialisation. À savoir : Cpk > 1,33 en production série, Cpk > 1,67 pour pièces critiques (typiquement horlogerie). Formules + interprétation.",
+        keyTopics: ["Cp vs Cpk", "LSC/LIC", "Centrage vs dispersion", "Seuil 1,33 / 1,67"],
+        difficulty: "Intermédiaire",
+      },
+    ],
+    keyQuestions: [
+      "Décris les 5 phases DMAIC et leur application à un problème de non-conformité en LIGA.",
+      "Quelle est la différence entre un plan d'expériences 2k complet et fractionné ?",
+      "Comment construire un diagramme Ishikawa pour un défaut de pitting en bain sulfamate ?",
+      "Qu'est-ce que le Cpk et quelle valeur minimale acceptable en production horlogère ?",
+      "Comment formaliser un savoir-faire industriel ? (instructions opératoires, FMEA, DRBFM)",
+    ],
+  },
+  {
+    id: "doe",
+    code: "06",
+    title: "Plans d'Expériences (DOE)",
+    subtitle: "Taguchi, factorial, RSM",
+    icon: "🧪",
+    accent: "#e74c3c",
+    priority: "Important",
+    timeEstimate: "2–3 h",
+    description: "Les DOE sont incontournables en industrialisation de procédés. Savoir les concevoir, les analyser et en tirer des conclusions est un attendu fort.",
+    resources: [
+      {
+        type: "Article open access",
+        format: "Gratuit",
+        title: "Application of DOE to Photolithography Process Optimization",
+        authors: "Divers auteurs",
+        source: "Recherche Google Scholar : 'DOE photolithography process optimization'",
+        url: "https://scholar.google.com/scholar?q=DOE+design+of+experiments+photolithography+process+optimization",
+        why: "Rechercher des articles appliquant le DOE directement en photolithographie (exposition, développement, softbake). Prépare un exemple de plan 2k appliqué à un paramètre LIGA (ex : dose vs T° développement → Cpk CD).",
+        keyTopics: ["Facteurs: dose, T° bake, temps développement", "Réponses: CD, sidewall angle, Cpk", "Interactions"],
+        difficulty: "Avancé",
+      },
+      {
+        type: "Cours",
+        format: "Gratuit",
+        title: "NIST/SEMATECH e-Handbook of Statistical Methods — DOE Chapter",
+        authors: "NIST",
+        source: "itl.nist.gov",
+        url: "https://www.itl.nist.gov/div898/handbook/pri/pri.htm",
+        why: "Référence en ligne gratuite et exhaustive sur les plans d'expériences. Chapitres 5.3 (factorial), 5.5 (fractional), 5.6 (RSM). Niveau ingénieur, bien illustré. Idéal pour réviser les notions de confound et résolution.",
+        keyTopics: ["Aliasing / confound", "Résolution III/IV/V", "Analyse des effets principaux", "Surface de réponse"],
+        difficulty: "Intermédiaire",
+      },
+      {
+        type: "Outil pratique",
+        format: "Logiciel gratuit",
+        title: "Minitab Free Trial / JMP Student Edition",
+        authors: "Minitab / SAS",
+        source: "minitab.com",
+        url: "https://www.minitab.com/en-us/products/minitab/free-trial/",
+        why: "Maîtriser au moins les bases de Minitab ou JMP pour l'analyse DOE et les cartes de contrôle est un vrai plus pour un poste industrialisation. Crée un exemple de plan 2^3 sur un process fictif LIGA.",
+        keyTopics: ["Main effects plot", "Interaction plot", "ANOVA table", "Contour plot RSM"],
+        difficulty: "Intermédiaire",
+      },
+    ],
+    keyQuestions: [
+      "Quelle est la différence entre un plan Taguchi et un plan factoriel classique ?",
+      "Comment choisir entre un plan 2k complet et un plan fractionné ?",
+      "Définis la résolution d'un plan et son impact sur l'interprétation des effets.",
+      "Cite 3 facteurs critiques que tu mettrais dans un DOE pour optimiser la photolithographie UV-LIGA.",
+      "Comment passes-tu d'un plan de criblage à un plan d'optimisation (RSM) ?",
+    ],
+  },
+  {
+    id: "rolex-contexte",
+    code: "07",
+    title: "Rolex SA — Contexte entreprise",
+    subtitle: "Organisation, fournitures, R&D",
+    icon: "👑",
+    accent: "#f39c12",
+    priority: "Important",
+    timeEstimate: "1–2 h",
+    description: "Connaître Rolex au-delà du produit fini : l'organisation (Genève + Bienne), le secteur Fournitures, les calibres actuels et la stratégie d'intégration verticale.",
+    resources: [
+      {
+        type: "Article horlogerie",
+        format: "Gratuit",
+        title: "Grand lexique Rolex — calibres, techniques et vocabulaire",
+        authors: "Chrono24 Magazine",
+        source: "chrono24.fr",
+        url: "https://www.chrono24.fr/magazine/abecedaire-rolex-de-chrono24-le-langage-rolex-1re-partie-p_71919/",
+        why: "Vocabulaire officiel Rolex : Chronergy, Parachrom, Syloxi, Glucydur, Rolex Perpetual. Indispensable pour parler le même langage que les intervieweurs. Permet d'anticiper les questions sur les matériaux et procédés.",
+        keyTopics: ["Échappement Chronergy", "Spiral Parachrom", "Balancier Glucydur", "Rotor Perpetual"],
+        difficulty: "Accessible",
+      },
+      {
+        type: "Article",
+        format: "Gratuit",
+        title: "Rolex Chronergy : 14 brevets, NiP, calibre 3255",
+        authors: "Chrono24",
+        source: "chrono24.fr",
+        url: "https://www.chrono24.fr/magazine/calibres-rolex-en-detail-la-gamme-actuelle-de-mouvements-de-la-marque-a-la-couronne-p_72423/",
+        why: "Détails des calibres récents (3235, 3255, 4161, 7135). Permet de faire le lien entre 'calibre' et 'procédé LIGA' lors de l'entretien. Montre que tu comprends le produit final de ton travail.",
+        keyTopics: ["Calibre 3255 (Day-Date)", "Calibre 4161 (Yacht-Master II)", "Calibre 7135 (Land-Dweller)", "LIGA NiP dans production série"],
+        difficulty: "Accessible",
+      },
+      {
+        type: "Article",
+        format: "Gratuit",
+        title: "Rolex & le consortium CSEM/Patek/Swatch — Silinvar",
+        authors: "Europa Star",
+        source: "europastar.com",
+        url: "https://www.europastar.com/the-watch-files/patek-philippe/1004090271-patek-philippe-pioneers-of-silicon.html",
+        why: "Le consortium Rolex/Patek/Swatch/CSEM est la preuve que Rolex s'implique dans la R&D sur les matériaux d'échappement. Montre l'écosystème R&D suisse dans lequel s'inscrit le poste.",
+        keyTopics: ["CSEM Neuchâtel", "Consortium silicium", "Silinvar", "Stratégie R&D Rolex"],
+        difficulty: "Accessible",
+      },
+    ],
+    keyQuestions: [
+      "Quels calibres Rolex utilisent le procédé LIGA et pour quels composants ?",
+      "Pourquoi Rolex produit-il ses composants LIGA en interne plutôt que de sous-traiter ?",
+      "Quelle est la différence entre le secteur Manufacture (Bienne) et le secteur Fournitures pour Rolex ?",
+      "Comment positionnez-vous votre expérience DM Surfaces par rapport aux exigences de production série Rolex ?",
+      "Qu'est-ce que le Dyapulse et pourquoi marque-t-il une évolution dans la stratégie matériaux de Rolex ?",
+    ],
+  },
+  {
+    id: "formalisation",
+    code: "08",
+    title: "Formalisation & Reporting",
+    subtitle: "Instructions opératoires, KPIs, Excel/PowerBI",
+    icon: "📋",
+    accent: "#8e44ad",
+    priority: "À préparer",
+    timeEstimate: "1–2 h",
+    description: "La fiche de poste insiste sur la formalisation du savoir-faire et le reporting. Prépare des exemples concrets tirés de ton expérience DM Surfaces et Panerai.",
+    resources: [
+      {
+        type: "Méthode",
+        format: "Gratuit",
+        title: "FMEA — Failure Mode and Effects Analysis (AIAG guide)",
+        authors: "ASQ / AIAG",
+        source: "asq.org",
+        url: "https://asq.org/quality-resources/fmea",
+        why: "La FMEA (Analyse des modes de défaillance) est l'outil clé de formalisation du risque procédé en industrialisation. Sais-tu construire une FMEA de process pour une ligne UV-LIGA ? C'est un attendu probable.",
+        keyTopics: ["Gravité / Occurrence / Détection", "RPN prioritization", "Actions correctives", "PFMEA vs DFMEA"],
+        difficulty: "Intermédiaire",
+      },
+      {
+        type: "Standard",
+        format: "Gratuit résumé",
+        title: "Instructions Opératoires — bonnes pratiques ISO 9001",
+        authors: "ISO / ASQ",
+        source: "iso.org",
+        url: "https://www.iso.org/iso-9001-quality-management.html",
+        why: "La fiche de poste mentionne 'formaliser le savoir-faire industriel'. En pratique = rédiger des IOs (Instructions Opératoires) selon les normes qualité. Avoir un exemple d'IO que tu as rédigé chez DM Surfaces est un atout majeur.",
+        keyTopics: ["Paramètres critiques", "Seuils d'alerte", "Traçabilité", "Validation procédé"],
+        difficulty: "Accessible",
+      },
+      {
+        type: "Outil",
+        format: "Gratuit (bases)",
+        title: "PowerBI / Excel pour le reporting procédé",
+        authors: "Microsoft",
+        source: "microsoft.com/power-bi",
+        url: "https://powerbi.microsoft.com/fr-fr/",
+        why: "Tu as déjà utilisé PowerBI chez Panerai. Prépare 1-2 exemples de dashboards que tu as créés (indicateurs de rendement, taux de conformité, Cpk en temps réel). Cela répond directement à 'maîtrise des outils de reporting'.",
+        keyTopics: ["KPIs procédé", "OEE / rendement", "SPC en temps réel", "Tableaux de bord"],
+        difficulty: "Accessible",
+      },
+    ],
+    keyQuestions: [
+      "Comment structureras-tu ton reporting hebdomadaire sur l'état du procédé LIGA en production ?",
+      "Quels KPIs définirais-tu pour suivre la performance d'une ligne UV-LIGA (ex : taux de conformité CD, Cpk, rendement) ?",
+      "Comment rédiges-tu une instruction opératoire pour le bake post-développement avant galvanoplastie ?",
+      "Décris une FMEA procédé pour l'étape d'exposition UV. Quels modes de défaillance identifies-tu ?",
+      "Comment as-tu utilisé PowerBI chez Panerai et comment appliqueras-tu cela chez Rolex ?",
+    ],
+  },
+];
+
+const AGENDA = [
+  { day: "J-7 à J-5", focus: "UV-LIGA + Photolithographie", modules: ["01", "02"], hours: "~4h/jour", tip: "Refaire le quiz interactif déjà préparé. Consolider les paramètres quantitatifs (dose, T°, pH)." },
+  { day: "J-4", focus: "Électroformage + Échappement Rolex", modules: ["03", "04"], hours: "~4h", tip: "Lire en priorité passion-horlogere.com/rolex-uv-liga/ et l'article ScienceDirect nickel sulfamate." },
+  { day: "J-3", focus: "Amélioration continue + DOE", modules: ["05", "06"], hours: "~4h", tip: "Préparer un exemple d'Ishikawa + un mini-DOE sur un paramètre LIGA. C'est ce qui fera la différence." },
+  { day: "J-2", focus: "Rolex contexte + Formalisation", modules: ["07", "08"], hours: "~3h", tip: "Préparer 3 exemples concrets DM Surfaces : un DOE, une IO, un dashboard PowerBI." },
+  { day: "J-1", focus: "Révision générale + cas pratiques", modules: [], hours: "~2h", tip: "Relire les 'key questions' de chaque module. Simuler un entretien oral. Préparer 3 questions à poser aux intervieweurs." },
+];
+
+export default function App() {
+  const [view, setView] = useState("home");
+  const [activeModule, setActiveModule] = useState(null);
+  const [activeTab, setActiveTab] = useState("resources");
+  const [checked, setChecked] = useState({});
+
+  const toggleCheck = (id) => setChecked(p => ({ ...p, [id]: !p[id] }));
+  const progress = Object.values(checked).filter(Boolean).length;
+  const total = MODULES.length;
+
+  const mod = activeModule !== null ? MODULES[activeModule] : null;
+
+  // ── HOME ──────────────────────────────────────────────────────────────────
+  if (view === "home") return (
+    <div style={{ minHeight: "100vh", background: "#0a0f14", color: "#e2e8f0", fontFamily: "'Inter', 'Segoe UI', sans-serif", padding: "28px 16px" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+
+        {/* Header */}
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontSize: 11, letterSpacing: 5, color: "#64748b", textTransform: "uppercase", marginBottom: 6 }}>Rolex SA — Ingénieur Procédé LIGA</div>
+          <h1 style={{ fontSize: 26, fontWeight: 800, margin: "0 0 4px", letterSpacing: -0.5 }}>Programme de Révision</h1>
+          <div style={{ fontSize: 13, color: "#94a3b8" }}>8 modules · 30+ ressources · Cas pratiques inclus</div>
+
+          {/* Progress */}
+          <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ flex: 1, height: 5, background: "#1e293b", borderRadius: 3, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${(progress / total) * 100}%`, background: "linear-gradient(90deg, #4a90d9, #27ae60)", borderRadius: 3, transition: "width 0.4s" }} />
+            </div>
+            <span style={{ fontSize: 12, color: "#64748b", flexShrink: 0 }}>{progress}/{total} modules traités</span>
+          </div>
+        </div>
+
+        {/* Module cards */}
+        <div style={{ display: "grid", gap: 10, marginBottom: 24 }}>
+          {MODULES.map((m, i) => (
+            <div key={m.id}
+              style={{ background: "#111827", border: `1px solid ${checked[m.id] ? m.accent + "55" : "#1e293b"}`, borderRadius: 10, overflow: "hidden", cursor: "pointer", transition: "border-color 0.15s" }}
+              onClick={() => { setActiveModule(i); setActiveTab("resources"); setView("module"); }}>
+              <div style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 14 }}>
+                <div style={{ width: 36, height: 36, background: m.accent + "22", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>{m.icon}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 2 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 2, color: m.accent }}>{m.code}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9" }}>{m.title}</span>
+                    <span style={{
+                      fontSize: 10, padding: "1px 7px", borderRadius: 10,
+                      background: m.priority === "Indispensable" ? "#16213044" : "#1e293b",
+                      color: m.priority === "Indispensable" ? "#f87171" : "#64748b",
+                      border: `1px solid ${m.priority === "Indispensable" ? "#f8717144" : "#1e293b"}`,
+                      flexShrink: 0
+                    }}>{m.priority}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: "#64748b" }}>{m.subtitle} · {m.timeEstimate}</div>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div onClick={e => { e.stopPropagation(); toggleCheck(m.id); }}
+                    style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${checked[m.id] ? m.accent : "#334155"}`, background: checked[m.id] ? m.accent : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.15s" }}>
+                    {checked[m.id] && <span style={{ color: "#fff", fontSize: 13, lineHeight: 1 }}>✓</span>}
+                  </div>
+                  <span style={{ color: "#334155", fontSize: 18 }}>›</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Planning */}
+        <div style={{ background: "#111827", border: "1px solid #1e293b", borderRadius: 12, padding: "18px 20px" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 3, color: "#f39c12", textTransform: "uppercase", marginBottom: 14 }}>📅 Planning J-7 → Entretien</div>
+          {AGENDA.map((d, i) => (
+            <div key={i} style={{ display: "flex", gap: 14, marginBottom: 10, paddingBottom: 10, borderBottom: i < AGENDA.length - 1 ? "1px solid #1e293b" : "none" }}>
+              <div style={{ width: 80, flexShrink: 0, fontSize: 11, fontWeight: 700, color: "#4a90d9", paddingTop: 1 }}>{d.day}</div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#f1f5f9", marginBottom: 2 }}>{d.focus} <span style={{ color: "#64748b", fontWeight: 400 }}>· {d.hours}</span></div>
+                <div style={{ fontSize: 12, color: "#94a3b8", fontStyle: "italic" }}>→ {d.tip}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── MODULE ────────────────────────────────────────────────────────────────
+  if (view === "module" && mod) return (
+    <div style={{ minHeight: "100vh", background: "#0a0f14", color: "#e2e8f0", fontFamily: "'Inter', 'Segoe UI', sans-serif", padding: "24px 16px" }}>
+      <div style={{ maxWidth: 720, margin: "0 auto" }}>
+
+        {/* Back + nav */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+          <button onClick={() => setView("home")} style={{ background: "none", border: "1px solid #1e293b", borderRadius: 6, padding: "6px 12px", cursor: "pointer", color: "#64748b", fontSize: 13 }}>← Retour</button>
+          <div style={{ display: "flex", gap: 6 }}>
+            {MODULES.map((m, i) => (
+              <button key={m.id} onClick={() => { setActiveModule(i); setActiveTab("resources"); }}
+                style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${i === activeModule ? m.accent : "#1e293b"}`, background: i === activeModule ? m.accent + "33" : "transparent", cursor: "pointer", fontSize: 11, color: i === activeModule ? m.accent : "#475569", fontWeight: 700 }}>
+                {m.code}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Module header */}
+        <div style={{ background: `linear-gradient(135deg, ${mod.accent}11, ${mod.accent}05)`, border: `1px solid ${mod.accent}33`, borderRadius: 12, padding: "20px 22px", marginBottom: 20 }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+            <span style={{ fontSize: 28 }}>{mod.icon}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, color: mod.accent, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", marginBottom: 4 }}>Module {mod.code}</div>
+              <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 800 }}>{mod.title}</h2>
+              <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 8 }}>{mod.subtitle} · {mod.timeEstimate}</div>
+              <p style={{ margin: 0, fontSize: 13, color: "#cbd5e1", lineHeight: 1.6 }}>{mod.description}</p>
+            </div>
+            <div onClick={() => toggleCheck(mod.id)}
+              style={{ width: 28, height: 28, borderRadius: 8, border: `2px solid ${checked[mod.id] ? mod.accent : "#334155"}`, background: checked[mod.id] ? mod.accent : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "all 0.15s" }}>
+              {checked[mod.id] && <span style={{ color: "#fff", fontSize: 14 }}>✓</span>}
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+          {[["resources", "📚 Ressources"], ["questions", "❓ Questions clés"]].map(([tab, label]) => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              style={{ padding: "8px 16px", borderRadius: 8, border: `1px solid ${activeTab === tab ? mod.accent : "#1e293b"}`, background: activeTab === tab ? mod.accent + "22" : "transparent", cursor: "pointer", color: activeTab === tab ? mod.accent : "#64748b", fontSize: 13, fontWeight: activeTab === tab ? 700 : 400 }}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Resources tab */}
+        {activeTab === "resources" && (
+          <div style={{ display: "grid", gap: 12 }}>
+            {mod.resources.map((r, i) => (
+              <div key={i} style={{ background: "#111827", border: "1px solid #1e293b", borderRadius: 10, padding: "16px 18px" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 5 }}>
+                      <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 8, background: "#1e293b", color: "#94a3b8" }}>{r.type}</span>
+                      <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 8, background: r.format === "Gratuit" || r.format === "Open Access" ? "#0d2b1a" : "#1e1a0d", color: r.format === "Gratuit" || r.format === "Open Access" ? "#4ade80" : "#fbbf24", border: `1px solid ${r.format === "Gratuit" || r.format === "Open Access" ? "#4ade8033" : "#fbbf2433"}` }}>{r.format}</span>
+                      <span style={{ fontSize: 10, padding: "2px 7px", borderRadius: 8, background: "#1e293b", color: r.difficulty === "Accessible" ? "#4ade80" : r.difficulty === "Intermédiaire" ? "#fbbf24" : "#f87171" }}>{r.difficulty}</span>
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#f1f5f9", marginBottom: 2 }}>{r.title}</div>
+                    <div style={{ fontSize: 12, color: "#64748b" }}>{r.authors} · {r.source}</div>
+                  </div>
+                </div>
+                <p style={{ margin: "0 0 10px", fontSize: 13, color: "#94a3b8", lineHeight: 1.6 }}>{r.why}</p>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+                  {r.keyTopics.map((t, j) => (
+                    <span key={j} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 8, background: mod.accent + "15", color: mod.accent, border: `1px solid ${mod.accent}33` }}>{t}</span>
+                  ))}
+                </div>
+                <a href={r.url} target="_blank" rel="noopener noreferrer"
+                  style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: mod.accent, textDecoration: "none", padding: "5px 12px", borderRadius: 6, border: `1px solid ${mod.accent}44`, background: mod.accent + "11" }}>
+                  Ouvrir la ressource →
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Questions tab */}
+        {activeTab === "questions" && (
+          <div style={{ display: "grid", gap: 10 }}>
+            {mod.keyQuestions.map((q, i) => (
+              <div key={i} style={{ background: "#111827", border: "1px solid #1e293b", borderRadius: 10, padding: "14px 18px", display: "flex", gap: 12 }}>
+                <span style={{ color: mod.accent, fontWeight: 800, fontSize: 16, flexShrink: 0, marginTop: 1 }}>Q{i + 1}</span>
+                <span style={{ fontSize: 14, color: "#cbd5e1", lineHeight: 1.6 }}>{q}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: 4, background: "#0d2b1a", border: "1px solid #27ae6033", borderRadius: 10, padding: "14px 18px", fontSize: 13, color: "#4ade80" }}>
+              💡 Pour chaque question, prépare une réponse structurée en 2–3 minutes avec un exemple tiré de ton expérience chez DM Surfaces.
+            </div>
+          </div>
+        )}
+
+        {/* Module nav footer */}
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 24 }}>
+          <button onClick={() => { if (activeModule > 0) { setActiveModule(activeModule - 1); setActiveTab("resources"); } }}
+            disabled={activeModule === 0}
+            style={{ background: "none", border: "1px solid #1e293b", borderRadius: 8, padding: "8px 16px", cursor: activeModule === 0 ? "not-allowed" : "pointer", color: activeModule === 0 ? "#1e293b" : "#64748b", fontSize: 13 }}>
+            ← Module précédent
+          </button>
+          <button onClick={() => { if (activeModule < MODULES.length - 1) { setActiveModule(activeModule + 1); setActiveTab("resources"); } }}
+            disabled={activeModule === MODULES.length - 1}
+            style={{ background: "none", border: "1px solid #1e293b", borderRadius: 8, padding: "8px 16px", cursor: activeModule === MODULES.length - 1 ? "not-allowed" : "pointer", color: activeModule === MODULES.length - 1 ? "#1e293b" : "#64748b", fontSize: 13 }}>
+            Module suivant →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return null;
+}
